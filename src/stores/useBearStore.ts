@@ -8,7 +8,13 @@ interface BearState {
     updateBears: (newBears: number) => void
 }
 
-const countPopulationDown = function (state: BearState) {
+const countPopulationUp = (state: BearState) => {
+    return {
+        bears: state.bears + 1
+    }
+}
+
+const countPopulationDown = (state: BearState) => {
     if (state.bears === 0) return state
     return {
         bears: state.bears - 1
@@ -17,7 +23,7 @@ const countPopulationDown = function (state: BearState) {
 
 export const useBear = create<BearState>((set) => ({
     bears: 0,
-    increasePopulation: () => set((state: BearState) => ({ bears: state.bears + 1 })),
+    increasePopulation: () => set(countPopulationUp),
     decreasePopulation: () => set(countPopulationDown),
     removeAllbears: () => set({ bears: 0 }),
     updateBears: (newBears: number) => set({ bears: newBears })
