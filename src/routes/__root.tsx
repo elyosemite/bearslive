@@ -4,7 +4,7 @@ export function RootLayout() {
     return (
         <div>
             <header>
-                <Link to="/">Bears Live — Blockchain Analysis</Link>
+                <Link to="/">Bears is On Live — Blockchain Analysis</Link>
             </header>
             <main>
                 <Outlet />
