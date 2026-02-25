@@ -31,24 +31,72 @@ transaction history)
 
 ```
 src/
-├── main.tsx                      # App entry point with providers
-├── router.ts                     # TanStack Router configuration
-├── routes/
-│   ├── __root.tsx                # Root layout component
-│   ├── index.tsx                 # Home page (address submission form)
-│   └── addresses/
-│       └── AddressPage.tsx       # Address detail page with transactions
-├── schemas/
-│   └── address.schema.ts         # Zod validation schemas
-├── services/
-│   └── blockstream.ts            # Blockstream API integration
-├── stores/
-│   ├── useBearStore.ts           # (Legacy) Bear counter store
-│   └── useInvestigationStore.ts  # Active investigation state
-└── components/
-    ├── BearCounter.tsx           # (Legacy) Demo component
-    └── Controls.tsx              # (Legacy) Demo component
+├── main.tsx                               # App entry point with providers
+├── router.ts                              # Assembles route tree, exports router
+├── index.css                              # Global styles
+│
+├── features/
+│   ├── investigation/                     # Bitcoin address investigation feature
+│   │   ├── components/
+│   │   │   ├── Hero.tsx                   # Landing search form
+│   │   │   └── Hero.css
+│   │   ├── pages/
+│   │   │   ├── HomePage.tsx               # Route component for /
+│   │   │   └── AddressPage.tsx            # Route component for /addresses/$address
+│   │   ├── routes/
+│   │   │   ├── indexRoute.ts              # createRoute for /
+│   │   │   └── addressRoute.ts            # createRoute for /addresses/$address
+│   │   ├── services/
+│   │   │   └── blockstream.ts             # Blockstream API integration
+│   │   ├── store/
+│   │   │   └── useInvestigationStore.ts   # Investigation Zustand store
+│   │   └── types/
+│   │       └── address.schema.ts          # Zod schemas + inferred types
+│   │
+│   └── bear-counter/                      # Zustand learning exercise
+│       ├── components/
+│       │   ├── BearCounter.tsx
+│       │   └── Controls.tsx
+│       ├── pages/
+│       │   ├── BearCounterPage.tsx        # Previously App.tsx
+│       │   └── BearCounterPage.css        # Previously App.css
+│       ├── routes/
+│       │   └── bearCounterRoute.ts        # createRoute for /demo
+│       └── store/
+│           └── useBearStore.ts
+│
+├── components/                            # Shared UI components (cross-feature)
+│
+├── pages/                                 # Pages not owned by any feature
+│   └── NotFoundPage.tsx
+│
+├── routes/                                # Root-level route config
+│   ├── __root.tsx                         # RootLayout component
+│   └── rootRoute.ts                       # createRootRoute definition
+│
+├── store/                                 # Global Zustand stores (cross-feature)
+│
+├── hooks/                                 # Global hooks
+│
+└── context/                               # React contexts
 ```
+
+### Where things live
+
+| Type | Belongs in |
+| ---- | ---------- |
+| Component used by one feature | `features/<name>/components/` |
+| Component used across features | `components/` |
+| Page rendered directly by a route | `features/<name>/pages/` or `pages/` |
+| Route definition (`createRoute`) | `features/<name>/routes/` |
+| API service for a feature | `features/<name>/services/` |
+| Zod schemas + inferred types | `features/<name>/types/` |
+| Zustand store scoped to a feature | `features/<name>/store/` |
+| Zustand store used across features | `store/` |
+| Hook scoped to a feature | `features/<name>/hooks/` |
+| Hook used across features | `hooks/` |
+
+`router.ts` only imports route definitions and assembles the tree — no component or business logic.
 
 ---
 
@@ -74,7 +122,7 @@ Order imports as follows:
 ```tsx
 import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { fetchTransactions } from "../../services/blockstream";
+import { fetchTransactions } from "../services/blockstream";
 ```
 
 ### TypeScript
@@ -90,14 +138,33 @@ import { fetchTransactions } from "../../services/blockstream";
 
 ### TanStack Router
 
-Routes are defined in `src/router.ts` using `createRoute`:
+Each feature defines its own routes in `features/<name>/routes/`. The root
+route lives in `src/routes/rootRoute.ts`. `src/router.ts` only assembles the
+tree:
 
 ```ts
-const addressRoute = createRoute({
+// src/router.ts
+import { rootRoute }    from './routes/rootRoute'
+import { indexRoute }   from './features/investigation/routes/indexRoute'
+import { addressRoute } from './features/investigation/routes/addressRoute'
+
+const routeTree = rootRoute.addChildren([indexRoute, addressRoute])
+export const router = createRouter({ routeTree })
+```
+
+A route definition lives alongside its feature, not in `router.ts`:
+
+```ts
+// src/features/investigation/routes/addressRoute.ts
+import { createRoute } from '@tanstack/react-router'
+import { rootRoute }   from '../../../routes/rootRoute'
+import { AddressPage } from '../pages/AddressPage'
+
+export const addressRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/addresses/$address",
     component: AddressPage,
-});
+})
 ```
 
 Access route params with `useParams`:
@@ -231,16 +298,24 @@ ESLint with TypeScript, React Hooks, and React Refresh rules enabled.
 
 ## Feature Development Checklist
 
-When implementing a new feature:
+When implementing a new feature, create a folder at `src/features/<name>/` and
+add only the sub-folders that the feature actually needs:
 
-1. Define Zod schema in `src/schemas/` if the feature involves forms or
-   validation
-2. Create service function in `src/services/` if the feature needs external data
-3. Add Zustand store slice in `src/stores/` if the feature needs global state
-4. Create route in `src/router.ts` if the feature needs a new page
-5. Create component in `src/routes/` or `src/components/`
-6. Use TanStack Query for server state, Zustand for client state
-7. Test manually with dev server before committing
+1. `types/` — Zod schemas and inferred TypeScript types (if the feature has
+   forms or validated data)
+2. `services/` — async functions that call external APIs (if the feature fetches
+   data)
+3. `store/` — Zustand store slice (if the feature needs local client state);
+   promote to `src/store/` only if the state is shared across features
+4. `routes/` — `createRoute` definitions, one file per route; import `rootRoute`
+   from `src/routes/rootRoute.ts`
+5. `pages/` — page components that routes render directly
+6. `components/` — smaller UI blocks used by the pages; promote to
+   `src/components/` only if other features use them too
+7. `hooks/` — custom hooks scoped to this feature (if needed)
+8. Register the new routes in `src/router.ts` (import and add to `addChildren`)
+9. Use TanStack Query for server state, Zustand for client state
+10. Test manually with dev server before committing
 
 ---
 
@@ -313,10 +388,8 @@ if (activeAddress) {
 
 ## Notes
 
-- The original `BearCounter` and `Controls` components are legacy demo code and
-  can be removed once the blockchain features are stable
-- The `useBearStore` is not used in the blockchain analysis features — it was
-  the initial learning exercise for Zustand
+- The `bear-counter` feature (`BearCounter`, `Controls`, `useBearStore`) was the
+  initial Zustand learning exercise — it is kept as a working reference at `/demo`
 - Bitcoin addresses come in three formats: P2PKH (starts with 1), P2SH (starts
   with 3), and Bech32 (starts with bc1)
 - All blockchain data is public — no authentication required for Blockstream API
