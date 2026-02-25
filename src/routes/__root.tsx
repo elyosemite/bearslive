@@ -1,14 +1,19 @@
-import { Outlet, Link } from "@tanstack/react-router";
+import { Outlet } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { useThemeStore } from '../store/useThemeStore'
+import { ThemeToggle } from '../components/ThemeToggle/ThemeToggle'
 
 export function RootLayout() {
+    const theme = useThemeStore((s) => s.theme)
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme)
+    }, [theme])
+
     return (
-        <div>
-            <header>
-                <Link to="/">Bears is On Live — Blockchain Analysis</Link>
-            </header>
-            <main>
-                <Outlet />
-            </main>
-        </div >
+        <>
+            <ThemeToggle />
+            <Outlet />
+        </>
     )
 }
