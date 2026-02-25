@@ -6,6 +6,7 @@ import { AddressProfile } from '../components/AddressProfile/AddressProfile'
 import { TransactionFilters } from '../components/TransactionFilters/TransactionFilters'
 import { TransactionList } from '../components/TransactionList/TransactionList'
 import { Pagination } from '../../../components/Pagination/Pagination'
+import { CounterpartyList } from '../components/CounterpartyList/CounterpartyList'
 import './AddressPage.css'
 
 export function AddressPage() {
@@ -81,6 +82,14 @@ export function AddressPage() {
                         onPageChange={handlePageChange}
                     />
                 </section>
+
+                {/* Counterparty network */}
+                {!isLoading && data && (
+                    <CounterpartyList
+                        transactions={data}
+                        ownAddress={address}
+                    />
+                )}
 
             </div>
         </div>
