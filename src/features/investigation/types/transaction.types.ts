@@ -3,9 +3,17 @@ export interface Vout {
     scriptpubkey_address?: string
 }
 
+export interface Vin {
+    prevout?: {
+        scriptpubkey_address?: string
+        value: number
+    }
+}
+
 export interface Transaction {
     txid: string
     fee: number
+    vin: Vin[]
     vout: Vout[]
     status: {
         confirmed: boolean
