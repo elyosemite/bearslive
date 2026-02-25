@@ -32,3 +32,9 @@ export interface AddressInfo {
     chain_stats: ChainStats
     mempool_stats: ChainStats
 }
+
+export interface Counterparty {
+    address:              string
+    interactionCount:     number
+    totalVolumeSatoshis:  number
+}
