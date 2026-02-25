@@ -1,0 +1,120 @@
+.address-profile {
+    background: var(--th-surface);
+    border: 1px solid var(--th-border);
+    border-left: 3px solid var(--th-blue);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.75rem;
+    font-family: 'DM Sans', sans-serif;
+    animation: profileIn 0.45s ease both;
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.address-profile--loading,
+.address-profile--error {
+    padding: 1.25rem 1.75rem;
+    background: var(--th-surface);
+    border: 1px solid var(--th-border);
+    border-left: 3px solid var(--th-border-str);
+    margin-bottom: 1.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--th-text-muted);
+    animation: profileIn 0.4s ease both;
+    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.address-profile__header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--th-border);
+    transition: border-color 0.25s ease;
+}
+
+.address-profile__address {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.83rem;
+    color: var(--th-text-muted);
+    word-break: break-all;
+    flex: 1;
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+    transition: color 0.25s ease;
+}
+
+.address-format-badge {
+    flex-shrink: 0;
+    padding: 0.2rem 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 500;
+    background: var(--th-blue-dim);
+    color: var(--th-blue-br);
+    border: 1px solid var(--th-blue-ring);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.address-profile__stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+}
+
+.address-profile__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0 2rem 0 0;
+}
+
+.address-profile__stat + .address-profile__stat {
+    padding-left: 2rem;
+    border-left: 1px solid var(--th-border);
+    transition: border-color 0.25s ease;
+}
+
+.address-profile__stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--th-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    transition: color 0.25s ease;
+}
+
+.address-profile__stat-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.55rem;
+    font-weight: 600;
+    color: var(--th-text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    transition: color 0.25s ease;
+}
+
+@keyframes profileIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 700px) {
+    .address-profile__stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .address-profile__stat {
+        padding: 0;
+    }
+
+    .address-profile__stat + .address-profile__stat {
+        padding-left: 0;
+        border-left: none;
+    }
+}

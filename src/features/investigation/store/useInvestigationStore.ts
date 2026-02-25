@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
 
 interface InvestigationState {
     activeAddress: string | null
@@ -9,5 +9,5 @@ interface InvestigationState {
 export const useInvestigation = create<InvestigationState>((set) => ({
     activeAddress: null,
     setActiveAddress: (address: string) => set({ activeAddress: address }),
-    clearActiveAddress: () => set({ activeAddress: null })
+    clearActiveAddress: () => set({ activeAddress: null }),
 }))

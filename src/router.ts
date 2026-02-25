@@ -1,25 +1,14 @@
-import { createRouter, createRoute, createRootRoute } from '@tanstack/react-router'
-import { RootLayout } from './routes/__root'
-import { HomePage } from './routes/index'
-import { AddressPage } from './routes/addresses/AddressPage'
+import { createRouter } from '@tanstack/react-router'
+import { rootRoute } from './routes/rootRoute'
+import { indexRoute } from './features/investigation/routes/indexRoute'
+import { addressRoute } from './features/investigation/routes/addressRoute'
+import { bearCounterRoute } from './features/bear-counter/routes/bearCounterRoute'
 
-const rootRoute = createRootRoute({
-    component: RootLayout,
-})
-
-const indexRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: '/',
-    component: HomePage,
-})
-
-const addressRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: '/addresses/$address',
-    component: AddressPage,
-})
-
-const routeTree = rootRoute.addChildren([indexRoute, addressRoute])
+const routeTree = rootRoute.addChildren([
+    indexRoute,
+    addressRoute,
+    bearCounterRoute,
+])
 
 export const router = createRouter({ routeTree })
 
