@@ -1,0 +1,20 @@
+.tx-dir {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid;
+}
+
+.tx-dir--in {
+    color: var(--th-green);
+    background: var(--th-green-dim);
+    border-color: color-mix(in srgb, var(--th-green) 25%, transparent);
+}
+
+.tx-dir--out {
+    color: var(--th-amber);
+    background: var(--th-amber-dim);
+    border-color: color-mix(in srgb, var(--th-amber) 25%, transparent);
+}
