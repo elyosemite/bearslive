@@ -1,0 +1,21 @@
+.graph-page {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--th-bg);
+}
+
+.graph-page--loading,
+.graph-page--error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.graph-page__message {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--th-text-muted);
+}

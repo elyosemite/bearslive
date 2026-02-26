@@ -1,0 +1,62 @@
+/* ── Hide default handles (connection dots) — SmartEdge draws from node borders ── */
+
+.react-flow__handle {
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* ── ReactFlow controls theme ─────────────────────────────────────────────── */
+
+.react-flow__controls {
+    background: var(--th-surface) !important;
+    border: 1px solid var(--th-border) !important;
+    box-shadow: none !important;
+}
+
+.react-flow__controls-button {
+    background: var(--th-surface) !important;
+    border-bottom: 1px solid var(--th-border) !important;
+    color: var(--th-text-muted) !important;
+    fill: var(--th-text-muted) !important;
+}
+
+.react-flow__controls-button:hover {
+    background: var(--th-surface-hov) !important;
+}
+
+.react-flow__minimap {
+    background: var(--th-surface) !important;
+    border: 1px solid var(--th-border) !important;
+}
+
+/* ── Legend panel ─────────────────────────────────────────────────────────── */
+
+.graph-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.85rem;
+    background: var(--th-surface);
+    border: 1px solid var(--th-border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--th-text-muted);
+    pointer-events: none;
+    user-select: none;
+}
+
+.graph-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.graph-legend__sep {
+    color: var(--th-text-faint);
+}
+
+.graph-legend__item--sender   { color: var(--th-green); }
+.graph-legend__item--origin   { color: var(--th-blue-br); }
+.graph-legend__item--receiver { color: var(--th-amber); }

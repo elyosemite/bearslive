@@ -45,6 +45,13 @@ export function AddressPage() {
                     <span className="inv-nav__crumb" title={address}>
                         {address.slice(0, 14)}…
                     </span>
+                    <span className="inv-nav__sep">/</span>
+                    <Link to="/graph/$address" params={{ address }} className="inv-nav__graph-link">
+                        View Graph
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                            <path d="M2 8L8 2M8 2H4M8 2V6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                        </svg>
+                    </Link>
                 </nav>
 
                 {/* Address profile card */}

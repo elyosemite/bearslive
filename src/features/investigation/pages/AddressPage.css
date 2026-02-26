@@ -83,6 +83,24 @@
     letter-spacing: 0.05em;
 }
 
+.inv-nav__graph-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--th-blue);
+    text-decoration: none;
+    transition: color 0.15s, gap 0.15s;
+}
+
+.inv-nav__graph-link:hover {
+    color: var(--th-blue-br);
+    gap: 0.5rem;
+}
+
 /* ── TRANSACTION LEDGER ───────────────────────────────────────────────────── */
 
 .tx-ledger {
