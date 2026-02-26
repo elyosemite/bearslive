@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { fetchTransactions } from '../services/blockstream'
+import { fetchTransactions } from '../services/blockstream/blockstream'
 import { AddressProfile } from '../components/AddressProfile/AddressProfile'
 import { TransactionFilters } from '../components/TransactionFilters/TransactionFilters'
 import { TransactionList } from '../components/TransactionList/TransactionList'
@@ -18,7 +18,7 @@ export function AddressPage() {
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['transactions', address],
-        queryFn:  () => fetchTransactions(address),
+        queryFn: () => fetchTransactions(address),
     })
 
     function handlePageChange(newPage: number) {

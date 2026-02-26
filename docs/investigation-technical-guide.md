@@ -134,8 +134,11 @@ src/
 │       │   ├── addressRoute.ts
 │       │   └── indexRoute.ts
 │       ├── services/            # API calls and pure data utilities
-│       │   ├── blockstream.ts
-│       │   └── counterparties.ts
+│       │   ├── blockstream/     # Blockstream.info provider
+│       │   │   ├── blockstream.ts   # Barrel re-export
+│       │   │   ├── address.ts       # fetchAddressInfo
+│       │   │   └── transaction.ts   # fetchTransactions
+│       │   └── counterparties.ts    # Pure utility — no HTTP
 │       ├── store/               # Zustand slices scoped to this feature
 │       │   └── useInvestigationStore.ts
 │       └── types/               # TypeScript interfaces and Zod schemas
@@ -294,12 +297,30 @@ while keeping the previous address cached for instant back-navigation.
 4. If the component will be reused by another feature, move it to
    `src/components/` instead.
 
-### Adding a new API endpoint
+### Adding a new external API provider
 
-1. Add the function to `src/features/investigation/services/blockstream.ts`.
-2. Define the response shape in `src/features/investigation/types/transaction.types.ts`.
-3. Call it via `useQuery` with a unique `queryKey` that includes all variables
-   the query depends on (e.g. `['endpoint-name', address]`).
+Each provider gets its own subfolder under `services/`:
+
+```
+services/
+├── blockstream/      # existing
+├── etherscan/        # add Ethereum support here
+└── coinbase/         # add exchange data here
+```
+
+Steps:
+1. Create `src/features/investigation/services/<provider>/`.
+2. Add one file per resource group (e.g. `address.ts`, `transaction.ts`).
+3. Add a barrel `<provider>.ts` that re-exports all fetchers from the subfolder.
+4. Define response shapes in `src/features/investigation/types/`.
+5. Call via `useQuery` with a unique `queryKey` (e.g. `['eth-transactions', address]`).
+
+### Adding a new endpoint to an existing provider
+
+1. Add the function to the relevant file inside `services/<provider>/`
+   (or create a new resource file in that subfolder).
+2. Re-export it from the provider barrel if it isn't already.
+3. Define the response shape in `types/transaction.types.ts`.
 
 ### Adding a new URL search param
 

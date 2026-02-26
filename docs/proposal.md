@@ -164,9 +164,13 @@ src/
 │   ├── AddressCard/
 │   └── InvestigationForm/
 └── services/
-    ├── bitcoin.ts                 # Bitcoin API integration
-    ├── ethereum.ts                # Ethereum API integration
-    └── analysis.ts                # Algorithm wrappers
+    ├── blockstream/               # Bitcoin — Blockstream.info
+    │   ├── blockstream.ts         # Barrel re-export
+    │   ├── address.ts
+    │   └── transaction.ts
+    ├── etherscan/                 # Ethereum — Etherscan (planned)
+    ├── binance/                   # Exchange data (planned)
+    └── analysis.ts                # Algorithm wrappers (pure, no HTTP)
 ```
 
 ---

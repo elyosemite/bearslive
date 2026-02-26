@@ -48,12 +48,13 @@ the entity before diving into individual transactions.
   }
   ```
 
-**2. Add `fetchAddressInfo` to the service**
+**2. Add `fetchAddressInfo` to the Blockstream service**
 
-- File: `features/investigation/services/blockstream.ts` (extend)
-- Add `fetchAddressInfo(address: string): Promise<AddressInfo>` calling
+- File: `features/investigation/services/blockstream/address.ts` (create)
+- `fetchAddressInfo(address: string): Promise<AddressInfo>` calling
   `GET /address/{address}`
 - Throw a descriptive error when the response is not ok
+- Re-export from `features/investigation/services/blockstream/blockstream.ts`
 
 **3. Create `AddressFormatBadge` component**
 

@@ -1,8 +1,8 @@
 import { useParams } from '@tanstack/react-router'
-import { useQuery }   from '@tanstack/react-query'
-import { fetchTransactions } from '../../investigation/services/blockstream'
-import { buildGraphData }    from '../services/graphBuilder'
-import { TransactionGraph }  from '../components/TransactionGraph/TransactionGraph'
+import { useQuery } from '@tanstack/react-query'
+import { fetchTransactions } from '../../investigation/services/blockstream/blockstream'
+import { buildGraphData } from '../services/graphBuilder'
+import { TransactionGraph } from '../components/TransactionGraph/TransactionGraph'
 import './GraphPage.css'
 
 export function GraphPage() {
@@ -10,7 +10,7 @@ export function GraphPage() {
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ['transactions', address],
-        queryFn:  () => fetchTransactions(address),
+        queryFn: () => fetchTransactions(address),
     })
 
     if (isLoading) {

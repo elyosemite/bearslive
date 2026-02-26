@@ -1,4 +1,4 @@
-import type { Transaction, AddressInfo } from '../types/transaction.types'
+import type { Transaction, AddressInfo } from '../../types/transaction.types'
 
 const BASE_URL = 'https://blockstream.info/api'
 

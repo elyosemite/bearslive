@@ -47,7 +47,11 @@ src/
 │   │   │   ├── indexRoute.ts              # createRoute for /
 │   │   │   └── addressRoute.ts            # createRoute for /addresses/$address
 │   │   ├── services/
-│   │   │   └── blockstream.ts             # Blockstream API integration
+│   │   │   ├── blockstream/               # Blockstream API (Bitcoin)
+│   │   │   │   ├── blockstream.ts         # Re-exports all Blockstream fetchers
+│   │   │   │   ├── address.ts             # fetchAddressInfo
+│   │   │   │   └── transaction.ts         # fetchTransactions
+│   │   │   └── counterparties.ts          # Pure data utility (no external API)
 │   │   ├── store/
 │   │   │   └── useInvestigationStore.ts   # Investigation Zustand store
 │   │   └── types/
@@ -242,27 +246,39 @@ const onSubmit = (data: AddressFormData) => {
 
 ## API Integration
 
+### Service folder convention
+
+Each external data provider gets its own subfolder under the feature's
+`services/` directory. This keeps provider-specific logic isolated and makes
+it straightforward to add new chains or exchanges later:
+
+```
+services/
+├── blockstream/          # Bitcoin — Blockstream.info
+│   ├── blockstream.ts    # Barrel: re-exports all fetchers
+│   ├── address.ts        # fetchAddressInfo
+│   └── transaction.ts    # fetchTransactions
+├── etherscan/            # Ethereum — future
+├── coinbase/             # Exchange data — future
+└── counterparties.ts     # Pure utility, no external API
+```
+
+Import always from the barrel file:
+
+```ts
+import { fetchTransactions } from '../services/blockstream/blockstream'
+```
+
 ### Blockstream API (Bitcoin)
 
 Base URL: `https://blockstream.info/api`
 
 Endpoints currently used:
 
-- `GET /address/{address}/txs` — Get all transactions for an address
-
-Response structure:
-
-```ts
-interface Transaction {
-    txid: string;
-    fee: number;
-    vout: Vout[];
-    status: {
-        confirmed: boolean;
-        block_time?: number;
-    };
-}
-```
+| Fetcher | Endpoint | File |
+|---------|----------|------|
+| `fetchTransactions` | `GET /address/{address}/txs` | `blockstream/transaction.ts` |
+| `fetchAddressInfo` | `GET /address/{address}` | `blockstream/address.ts` |
 
 All amounts are in satoshis (1 BTC = 100,000,000 satoshis).
 
@@ -303,8 +319,9 @@ add only the sub-folders that the feature actually needs:
 
 1. `types/` — Zod schemas and inferred TypeScript types (if the feature has
    forms or validated data)
-2. `services/` — async functions that call external APIs (if the feature fetches
-   data)
+2. `services/` — one **subfolder per external provider** (e.g. `blockstream/`,
+   `etherscan/`) each with a barrel file; pure utilities (no HTTP) sit directly
+   in `services/` (e.g. `counterparties.ts`)
 3. `store/` — Zustand store slice (if the feature needs local client state);
    promote to `src/store/` only if the state is shared across features
 4. `routes/` — `createRoute` definitions, one file per route; import `rootRoute`
@@ -326,20 +343,19 @@ add only the sub-folders that the feature actually needs:
 - TanStack Router setup with root layout and two routes
 - Home page with address submission form
 - React Hook Form integration with Zod validation
-- Blockstream API service for fetching Bitcoin transactions
-- Address detail page with transaction list
+- Blockstream API service (`services/blockstream/`) for fetching Bitcoin transactions
+- Address detail page with transaction list, filters, pagination
 - Zustand store for active investigation state
 - TanStack Query integration with automatic caching
+- Transaction flow graph at `/graph/$address` (US-01)
 
 ### Next Steps (Phase 2)
 
-- Transaction graph visualization
+- Node expansion in graph (follow the money — US-02)
+- Path highlighting between two addresses (US-03)
+- Risk scoring algorithm
 - Address clustering heuristics (common-input-ownership)
-- Risk scoring algorithm (initial implementation)
-- Transaction filtering and sorting
-- Pagination for large transaction lists
-- Error handling improvements
-- Loading states and skeletons
+- Multi-chain support (Ethereum via Etherscan)
 
 ---
 
