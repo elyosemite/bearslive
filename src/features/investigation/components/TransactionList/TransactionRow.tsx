@@ -14,8 +14,8 @@ function formatDate(unixTs?: number) {
 function truncateTxid(txid: string) {
     return {
         anchor: txid.slice(0, 6),
-        body:   txid.slice(6, -4),
-        tail:   txid.slice(-4),
+        body: txid.slice(6, -4),
+        tail: txid.slice(-4),
     }
 }
 
@@ -38,16 +38,16 @@ function deriveValue(tx: Transaction, ownAddress: string, direction: 'in' | 'out
 }
 
 interface Props {
-    tx:          Transaction
-    ownAddress:  string
-    delayIndex:  number
+    tx: Transaction
+    ownAddress: string
+    delayIndex: number
 }
 
 export function TransactionRow({ tx, ownAddress, delayIndex }: Props) {
     const confirmed = tx.status.confirmed
-    const rowClass  = `tx-row ${confirmed ? 'tx-row--confirmed' : 'tx-row--pending'}`
+    const rowClass = `tx-row ${confirmed ? 'tx-row--confirmed' : 'tx-row--pending'}`
     const direction = deriveDirection(tx, ownAddress)
-    const value     = deriveValue(tx, ownAddress, direction)
+    const value = deriveValue(tx, ownAddress, direction)
     const { anchor, body, tail } = truncateTxid(tx.txid)
 
     return (

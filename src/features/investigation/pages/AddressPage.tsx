@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { fetchTransactions } from '../services/blockstream/blockstream'
+import { fetchTransactions } from '../services/blockstream'
 import { AddressProfile } from '../components/AddressProfile/AddressProfile'
 import { TransactionFilters } from '../components/TransactionFilters/TransactionFilters'
 import { TransactionList } from '../components/TransactionList/TransactionList'

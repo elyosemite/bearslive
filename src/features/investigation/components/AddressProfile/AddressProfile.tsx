@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchAddressInfo } from '../../services/blockstream/blockstream'
+import { fetchAddressInfo } from '../../services/blockstream/address'
 import { AddressFormatBadge } from '../AddressFormatBadge'
 import './AddressProfile.css'
 

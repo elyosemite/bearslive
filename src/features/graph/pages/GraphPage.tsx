@@ -1,6 +1,6 @@
 import { useParams } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { fetchTransactions } from '../../investigation/services/blockstream/blockstream'
+import { fetchTransactions } from '../../investigation/services/blockstream/transaction'
 import { buildGraphData } from '../services/graphBuilder'
 import { TransactionGraph } from '../components/TransactionGraph/TransactionGraph'
 import './GraphPage.css'

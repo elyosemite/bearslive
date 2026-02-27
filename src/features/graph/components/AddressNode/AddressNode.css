@@ -1,0 +1,145 @@
+/* ── Reset ReactFlow's default wrapper for our custom type ─────────────────── */
+
+.react-flow__node-address {
+    background:    none !important;
+    border:        none !important;
+    padding:       0    !important;
+    border-radius: 0    !important;
+    box-shadow:    none !important;
+}
+
+/* ── Node shell ───────────────────────────────────────────────────────────── */
+
+.addr-node {
+    position:    relative;
+    padding:     7px 28px 7px 10px; /* right padding reserves space for expand btn */
+    min-width:   120px;
+    max-width:   170px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size:   10px;
+    line-height: 1.45;
+    word-break:  break-all;
+    white-space: normal;
+    border-radius: 4px;
+    transition:  box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor:      default;
+    user-select: none;
+}
+
+/* ── Role variants ────────────────────────────────────────────────────────── */
+
+.addr-node--origin {
+    background:  var(--th-blue-dim);
+    border:      2px solid var(--th-blue);
+    color:       var(--th-blue-br);
+    font-size:   11px;
+    font-weight: 500;
+    padding-right: 10px; /* origin has no expand btn */
+}
+
+.addr-node--sender {
+    background: var(--th-green-dim);
+    border:     1px solid var(--th-green);
+    color:      var(--th-green);
+}
+
+.addr-node--receiver {
+    background: var(--th-amber-dim);
+    border:     1px solid var(--th-amber);
+    color:      var(--th-amber);
+}
+
+.addr-node--peer {
+    background: var(--th-surface);
+    border:     1px solid var(--th-border-str);
+    color:      var(--th-text-muted);
+}
+
+/* ── Expanded: dashed border ─────────────────────────────────────────────── */
+
+.addr-node--expanded {
+    border-style: dashed;
+    opacity: 0.85;
+}
+
+/* ── Loading: pulsing glow ───────────────────────────────────────────────── */
+
+.addr-node--loading {
+    animation: addrNodePulse 1.4s ease-in-out infinite;
+}
+
+@keyframes addrNodePulse {
+    0%,  100% { box-shadow: 0 0 0 0px  var(--th-blue-ring); }
+    50%        { box-shadow: 0 0 0 5px  var(--th-blue-ring); }
+}
+
+/* ── Label ────────────────────────────────────────────────────────────────── */
+
+.addr-node__label {
+    display: block;
+    letter-spacing: 0.02em;
+}
+
+/* ── Expand button ────────────────────────────────────────────────────────── */
+
+.addr-node__expand {
+    position:       absolute;
+    top:            50%;
+    right:          6px;
+    transform:      translateY(-50%);
+    width:          16px;
+    height:         16px;
+    border-radius:  50%;
+    border:         1px solid currentColor;
+    background:     transparent;
+    color:          currentColor;
+    cursor:         pointer;
+    display:        flex;
+    align-items:    center;
+    justify-content: center;
+    opacity:        0.4;
+    transition:     opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+    padding:        0;
+    flex-shrink:    0;
+    line-height:    1;
+}
+
+.addr-node__expand:hover:not(:disabled) {
+    opacity:    1;
+    transform:  translateY(-50%) scale(1.15);
+    box-shadow: 0 0 0 3px var(--th-blue-ring);
+}
+
+.addr-node__expand:focus-visible {
+    outline:    none;
+    box-shadow: 0 0 0 3px var(--th-blue-ring);
+    opacity:    1;
+}
+
+.addr-node__expand:disabled {
+    cursor:  default;
+    opacity: 0.5;
+}
+
+.addr-node__expand--loading,
+.addr-node__expand--done {
+    opacity: 0.65;
+}
+
+/* ── Spinner ──────────────────────────────────────────────────────────────── */
+
+.addr-node__spinner {
+    display:       block;
+    width:         9px;
+    height:        9px;
+    border:        1.5px solid transparent;
+    border-top-color: currentColor;
+    border-right-color: currentColor;
+    border-radius: 50%;
+    animation:     addrSpin 0.7s linear infinite;
+}
+
+@keyframes addrSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
