@@ -1,16 +1,25 @@
-import { useParams } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { fetchTransactions } from '../../investigation/services/blockstream/transaction'
-import { buildGraphData } from '../services/graphBuilder'
-import { TransactionGraph } from '../components/TransactionGraph/TransactionGraph'
+import { useMemo }               from 'react'
+import { useParams, useSearch } from '@tanstack/react-router'
+import { useQuery }              from '@tanstack/react-query'
+import { fetchTransactions }     from '../../investigation/services/blockstream/transaction'
+import { buildGraphData }        from '../services/graphBuilder'
+import type { DateFilter }       from '../services/graphBuilder'
+import { TransactionGraph }      from '../components/TransactionGraph/TransactionGraph'
 import './GraphPage.css'
 
+function isoToTimestamp(iso?: string): number | undefined {
+    if (!iso) return undefined
+    const ms = new Date(iso).getTime()
+    return isNaN(ms) ? undefined : ms / 1000
+}
+
 export function GraphPage() {
-    const { address } = useParams({ from: '/graph/$address' })
+    const { address }    = useParams({ from: '/graph/$address' })
+    const { from, to }   = useSearch({ from: '/graph/$address' })
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ['transactions', address],
-        queryFn: () => fetchTransactions(address),
+        queryFn:  () => fetchTransactions(address),
     })
 
     if (isLoading) {
@@ -29,11 +38,19 @@ export function GraphPage() {
         )
     }
 
-    const graphData = buildGraphData(data, address)
+    const filter = useMemo<DateFilter>(
+        () => ({ from: isoToTimestamp(from), to: isoToTimestamp(to) }),
+        [from, to],
+    )
+
+    const graphData = useMemo(
+        () => buildGraphData(data.txs, address, filter),
+        [data.txs, address, filter],
+    )
 
     return (
         <div className="graph-page">
-            <TransactionGraph data={graphData} />
+            <TransactionGraph data={graphData} filter={filter} />
         </div>
     )
 }

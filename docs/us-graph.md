@@ -231,6 +231,281 @@ its own transactions and connections,
 
 ---
 
+## US-04 — Graph Filtering & Incremental Loading
+
+**As an** investigator,
+**I want** to filter the transaction graph by date range and load address
+transactions incrementally (page by page),
+**so that** I can focus on a specific time window and avoid an overwhelming
+number of nodes when an address has thousands of transactions.
+
+### Acceptance Criteria
+
+- A date-filter panel is visible in the graph (floating, non-blocking)
+- The investigator can set a **start date** and **end date**; the graph rebuilds
+  showing only transactions whose `block_time` falls within that range
+- Unconfirmed (mempool) transactions always appear regardless of the active
+  date filter, because they represent the current state of the network
+- Date values are encoded in the URL search params (`?from=YYYY-MM-DD&to=YYYY-MM-DD`),
+  making filtered views bookmarkable and shareable
+- When expanding a node, only the first page of transactions (up to 25, the
+  Blockstream API's natural page size) is fetched and added to the graph
+- Nodes that have more transactions available show a **"Load more"** button;
+  clicking it fetches the next page and merges the new nodes/edges
+- Only **one node expansion is in progress at a time** (serial queue): while
+  any fetch is running, all other expand buttons are disabled; the in-flight
+  node shows a loading spinner
+
+### Implementation Notes
+
+**Date filter — URL search params:**
+
+`graphRoute.ts` uses `validateSearch` to declare `from?: string` and `to?: string`
+as ISO date strings. `GraphPage` reads them with `useSearch` and passes a
+`DateFilter` object to `buildGraphData`. Any graph rebuild triggered by a date
+change resets the store so the graph is reconstructed from scratch.
+
+**`buildGraphData` filter option:**
+
+```ts
+interface DateFilter { from?: number; to?: number }  // Unix timestamps (seconds)
+
+buildGraphData(txs, originAddress, filter?: DateFilter): GraphData
+```
+
+Filtering logic: `tx.status.block_time` must be within `[from, to]` (both
+inclusive). When a bound is absent the comparison is skipped. Unconfirmed txs
+(no `block_time`) are always included.
+
+**Blockstream pagination:**
+
+- First fetch: `GET /address/{addr}/txs` → up to 25 transactions
+- Next pages: `GET /address/{addr}/txs/chain/{last_seen_txid}` → next 25
+- `fetchTransactions(address, afterTxid?: string)` in
+  `blockstream/transaction.ts` handles both forms
+
+**Store additions (`useGraphStore`):**
+
+```ts
+lastSeenTxids:  Map<string, string | null>   // address → last txid fetched
+hasMoreTxs:     Map<string, boolean>         // address → more pages available
+isExpanding:    boolean                      // serial lock — one at a time
+
+setPageState: (address: string, lastTxid: string | null, hasMore: boolean) => void
+```
+
+**`NodeFetcher` additions:**
+
+Accepts an optional `afterTxid?: string` prop; when set, calls the paginated
+endpoint. The `onFetched` callback gains a `hasMore: boolean` third argument
+so `TransactionGraph` can update the store.
+
+**`AddressNode` additions:**
+
+- `canExpand` check now also gates on `!isGloballyExpanding` (reads `isExpanding`
+  from store)
+- A secondary `"Load more"` button appears when `hasMoreTxs.has(id)`; it calls
+  `startLoading(id)` with the `afterTxid` for that node's next page
+
+### Tasks
+
+**1. Extend `graphRoute.ts` with `validateSearch`**
+- Add `from?: string` and `to?: string` ISO date params
+- Validate with Zod: `z.object({ from: z.string().optional(), to: z.string().optional() })`
+
+**2. Create `DateFilterPanel` component**
+- File: `features/graph/components/DateFilterPanel/DateFilterPanel.tsx` (create)
+- File: `features/graph/components/DateFilterPanel/DateFilterPanel.css` (create)
+- Two `<input type="date">` fields for start and end
+- On change: updates URL search params via `useNavigate` (replaces history entry)
+- Floats inside the graph as a ReactFlow `<Panel position="top-right">`
+
+**3. Extend `buildGraphData` with date filter**
+- File: `features/graph/services/graphBuilder.ts` (extend)
+- New signature: `buildGraphData(txs, origin, filter?: DateFilter)`
+- Apply filter before building nodes/edges; unconfirmed always pass through
+
+**4. Update `blockstream/transaction.ts`**
+- New signature: `fetchTransactions(address: string, afterTxid?: string)`
+- When `afterTxid` is set, fetch `GET /address/{addr}/txs/chain/{afterTxid}`
+- Returns `{ txs: Transaction[], lastSeenTxid: string | null, hasMore: boolean }`
+  (wrap the existing `Transaction[]` response in a typed result object)
+
+**5. Extend `useGraphStore`**
+- Add `lastSeenTxids`, `hasMoreTxs`, `isExpanding`, and `setPageState`
+- `startLoading` now sets `isExpanding = true`
+- `stopLoading` sets `isExpanding = false`
+
+**6. Update `NodeFetcher`**
+- Accept `afterTxid?: string` prop
+- Pass paginated result to `onFetched(address, txs, hasMore, lastSeenTxid)`
+
+**7. Update `AddressNode`**
+- Read `isExpanding` from store; gate `canExpand` on it
+- Render "Load more" button when `hasMoreTxs.has(id)` (and not loading)
+
+**8. Update `TransactionGraph`**
+- Pass `afterTxid` to `NodeFetcher` based on `lastSeenTxids`
+- In `handleFetched`: call `setPageState(address, lastTxid, hasMore)`
+- Integrate `DateFilterPanel`; rebuild graph when search params change
+- Pass date filter from URL params to `buildGraphData`
+
+---
+
+## US-05 — Smart Layout & Edge Control
+
+**As an** investigator,
+**I want** the graph to automatically arrange nodes in a clear, readable layout
+and to be able to reposition the connection point of any edge on its target
+node without changing which nodes the edge connects,
+**so that** I can produce well-organized, presentation-quality graph diagrams
+without manual repositioning after every expansion.
+
+### Acceptance Criteria
+
+- On initial load and after every node expansion, **dagre** re-runs and
+  repositions all nodes in a left-to-right hierarchical layout; the money
+  flows left-to-right, matching how investigators read transaction chains
+- The user can still drag nodes to tweak the final layout
+- Each address node exposes **four connection handles** (top, right, bottom,
+  left) visible on hover
+- An edge's connection point can be changed by **dragging its endpoint** to a
+  different handle on the **same node**; dragging to a handle on a different
+  node is rejected (`onReconnect` validation)
+- Edge curves remain smooth Bézier regardless of which handles are selected
+- The `SmartEdge` component no longer calls `useInternalNode`; it uses the
+  `sourceX/Y/targetX/Y/sourcePosition/targetPosition` props that React Flow
+  computes from the explicit handle positions — this also fixes the
+  first-render disconnected-edge bug
+
+### Implementation Notes
+
+**dagre layout (`graphLayout.ts`):**
+
+```ts
+import dagre from '@dagrejs/dagre'
+
+const NODE_WIDTH  = 170
+const NODE_HEIGHT =  40
+
+export function getLayoutedNodes(
+    nodes: Node[],
+    edges: Edge[],
+    direction: 'LR' | 'TB' = 'LR',
+): Node[]
+```
+
+- Creates a `new dagre.graphlib.Graph()` with `{ rankdir: direction, nodesep: 60, ranksep: 100 }`
+- Sets each node with `g.setNode(n.id, { width: NODE_WIDTH, height: NODE_HEIGHT })`
+- Sets each edge with `g.setEdge(e.source, e.target)`
+- After `dagre.layout(g)`, reads `g.node(id).x / .y` and returns updated `Node[]`
+  with `position: { x: node.x - NODE_WIDTH/2, y: node.y - NODE_HEIGHT/2 }`
+
+Called in `TransactionGraph` after building initial nodes and after each expansion
+(`handleFetched`). Node positions are set via `setNodes` with the layouted result.
+User-dragged positions are overridden only on expansion (not on filter change
+applied to the same node set).
+
+**Explicit handles in `AddressNode`:**
+
+```tsx
+import { Handle, Position } from '@xyflow/react'
+
+// Inside the JSX, after the label and before closing div:
+<Handle type="source" position={Position.Top}    id="top"    />
+<Handle type="source" position={Position.Right}  id="right"  />
+<Handle type="source" position={Position.Bottom} id="bottom" />
+<Handle type="source" position={Position.Left}   id="left"   />
+```
+
+The four handles are styled as small dots (visible on hover); the hidden-handle
+CSS rule in `TransactionGraph.css` is removed. `connectionMode="loose"` on
+`<ReactFlow>` allows handles to serve as both source and target.
+
+**Handle assignment at edge creation:**
+
+```ts
+function getHandleIds(srcPos: XYPosition, tgtPos: XYPosition) {
+    const dx = tgtPos.x - srcPos.x
+    const dy = tgtPos.y - srcPos.y
+    return Math.abs(dx) >= Math.abs(dy)
+        ? { sourceHandle: dx >= 0 ? 'right' : 'left',
+            targetHandle: dx >= 0 ? 'left'  : 'right' }
+        : { sourceHandle: dy >= 0 ? 'bottom' : 'top',
+            targetHandle: dy >= 0 ? 'top'    : 'bottom' }
+}
+```
+
+Called after dagre layout runs; pass `sourceHandle`/`targetHandle` to each
+edge object so React Flow routes from the correct handle.
+
+**Reconnectable edges:**
+
+```tsx
+<ReactFlow
+    reconnectRadius={10}
+    onReconnect={(oldEdge, newConn) => {
+        if (newConn.target !== oldEdge.target) return   // reject cross-node
+        if (newConn.source !== oldEdge.source) return
+        setEdges((es) => reconnectEdge(oldEdge, newConn, es))
+    }}
+/>
+```
+
+Import `reconnectEdge` from `@xyflow/react`.
+
+**Simplified `SmartEdge`:**
+
+Since React Flow computes `sourceX/Y/targetX/Y/sourcePosition/targetPosition`
+from the explicit handles, `SmartEdge` no longer needs `useInternalNode`:
+
+```tsx
+export function SmartEdge({ id, sourceX, sourceY, targetX, targetY,
+    sourcePosition, targetPosition, label, animated, style, markerEnd }: EdgeProps) {
+    const [edgePath, labelX, labelY] = getBezierPath({
+        sourceX, sourceY, sourcePosition,
+        targetX, targetY, targetPosition,
+    })
+    // ... render path + label
+}
+```
+
+### Tasks
+
+**1. Install `@dagrejs/dagre`**
+- Run: `pnpm add @dagrejs/dagre`
+- Package ships its own TypeScript types; no `@types/dagre` needed
+
+**2. Create `graphLayout.ts`**
+- File: `features/graph/services/graphLayout.ts` (create)
+- Export `getLayoutedNodes(nodes, edges, direction?)` as described above
+
+**3. Add 4 explicit handles to `AddressNode`**
+- File: `features/graph/components/AddressNode/AddressNode.tsx` (extend)
+- Remove the hidden-handle CSS workaround (no longer needed)
+- Add `Handle` elements at top, right, bottom, left
+- CSS: handles hidden by default, shown as 6px dots on node hover
+
+**4. Add `connectionMode` and `onReconnect` to `TransactionGraph`**
+- File: `features/graph/components/TransactionGraph/TransactionGraph.tsx` (extend)
+- `connectionMode="loose"` on `<ReactFlow>`
+- `reconnectRadius={10}`
+- `onReconnect` callback with same-node validation
+- After dagre: compute and set `sourceHandle`/`targetHandle` for each edge
+- Remove `.react-flow__handle { visibility: hidden }` from `TransactionGraph.css`
+
+**5. Simplify `SmartEdge`**
+- File: `features/graph/components/TransactionGraph/SmartEdge.tsx` (rewrite)
+- Remove `useInternalNode`, `getEdgeParams`
+- Use props directly with `getBezierPath`
+
+**6. Integrate dagre in `TransactionGraph`**
+- After `buildNodes(data, originId)` → run `getLayoutedNodes`
+- After `handleFetched` merges new nodes → run `getLayoutedNodes` on full set
+- Set both nodes and their matching edges' `sourceHandle`/`targetHandle`
+
+---
+
 ## US-03 — Path Highlighting Between Two Addresses
 
 **As an** investigator,

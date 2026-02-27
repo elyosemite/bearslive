@@ -62,7 +62,7 @@ export function AddressPage() {
                     <div className="tx-ledger__meta">
                         <span className="tx-ledger__label">Transaction Ledger</span>
                         {data && (
-                            <span className="tx-ledger__count">{data.length} records</span>
+                            <span className="tx-ledger__count">{data.txs.length} records</span>
                         )}
                     </div>
                     <div className="tx-ledger__divider" />
@@ -77,7 +77,7 @@ export function AddressPage() {
                     <TransactionFilters />
 
                     <TransactionList
-                        transactions={data ?? []}
+                        transactions={data?.txs ?? []}
                         ownAddress={address}
                         isLoading={isLoading}
                         onTotalPages={setTotalPages}
@@ -93,7 +93,7 @@ export function AddressPage() {
                 {/* Counterparty network */}
                 {!isLoading && data && (
                     <CounterpartyList
-                        transactions={data}
+                        transactions={data.txs}
                         ownAddress={address}
                     />
                 )}

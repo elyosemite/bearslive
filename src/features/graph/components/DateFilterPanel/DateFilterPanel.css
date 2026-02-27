@@ -1,0 +1,83 @@
+/* ── Date filter panel ──────────────────────────────────────────────────────── */
+
+.date-filter {
+    display:        flex;
+    align-items:    center;
+    gap:            0.5rem;
+    padding:        6px 10px;
+    background:     var(--th-surface);
+    border:         1px solid var(--th-border);
+    border-radius:  4px;
+    font-family:    'JetBrains Mono', monospace;
+    font-size:      10px;
+    color:          var(--th-text-muted);
+    transition:     border-color 0.15s;
+}
+
+.date-filter--active {
+    border-color: var(--th-blue);
+    color:        var(--th-text);
+}
+
+.date-filter__label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size:      9px;
+    color:          var(--th-text-faint);
+    white-space:    nowrap;
+}
+
+.date-filter__fields {
+    display:     flex;
+    align-items: center;
+    gap:         0.35rem;
+}
+
+.date-filter__input {
+    background:    var(--th-surface);
+    border:        1px solid var(--th-border);
+    border-radius: 3px;
+    color:         var(--th-text);
+    font-family:   inherit;
+    font-size:     10px;
+    padding:       3px 5px;
+    outline:       none;
+    transition:    border-color 0.15s;
+    /* Suppress the browser's native calendar-picker icon on WebKit */
+    -webkit-appearance: none;
+    width: 100px;
+}
+
+.date-filter__input:focus {
+    border-color: var(--th-blue);
+}
+
+/* Dark calendar icon in Chrome/Edge dark mode */
+.date-filter__input::-webkit-calendar-picker-indicator {
+    filter:  invert(0.7);
+    cursor:  pointer;
+    opacity: 0.5;
+}
+.date-filter__input::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+.date-filter__sep {
+    color:   var(--th-text-faint);
+    font-size: 10px;
+}
+
+.date-filter__clear {
+    background:    none;
+    border:        none;
+    padding:       0 2px;
+    color:         var(--th-text-faint);
+    font-size:     10px;
+    cursor:        pointer;
+    line-height:   1;
+    transition:    color 0.15s;
+}
+
+.date-filter__clear:hover {
+    color: var(--th-red, #ef4444);
+}
