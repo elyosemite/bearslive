@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useCallback, useRef } from 'react'
+import { useMemo, useEffect, useCallback, useRef, useState } from 'react'
 import {
     ReactFlow,
     MiniMap,
@@ -28,6 +28,8 @@ import { MemoAddressNode }       from '../AddressNode/AddressNode'
 import { SmartEdge }             from './SmartEdge'
 import { NodeFetcher }           from './NodeFetcher'
 import { DateFilterPanel }       from '../DateFilterPanel/DateFilterPanel'
+import { InteractionPanel }      from '../InteractionPanel/InteractionPanel'
+import type { InteractionMode }  from '../InteractionPanel/InteractionPanel'
 import './TransactionGraph.css'
 
 // ── Static type registries ────────────────────────────────────────────────────
@@ -97,10 +99,11 @@ function buildNodes(data: GraphData, originId: string): Node[] {
 
     return [
         {
-            id:       originId,
-            type:     'address',
-            position: { x: 0, y: 0 },
-            data:     { label: truncate(originId), role: 'origin' },
+            id:         originId,
+            type:       'address',
+            position:   { x: 0, y: 0 },
+            selectable: false,   // origin can never be selected or deleted
+            data:       { label: truncate(originId), role: 'origin' },
         },
         ...senders.map((n, i) => ({
             id:       n.id,
@@ -207,7 +210,10 @@ export function TransactionGraph({ data, filter }: Props) {
     const stopLoading      = useGraphStore((s) => s.stopLoading)
     const expandAddress    = useGraphStore((s) => s.expandAddress)
     const setPageState     = useGraphStore((s) => s.setPageState)
+    const removeAddresses  = useGraphStore((s) => s.removeAddresses)
     const resetStore       = useGraphStore((s) => s.reset)
+
+    const [interactionMode, setInteractionMode] = useState<InteractionMode>('drag')
 
     // Reset everything when origin address or filtered data changes
     useEffect(() => {
@@ -361,6 +367,55 @@ export function TransactionGraph({ data, filter }: Props) {
         useGraphStore.getState().stopLoading(address)
     }, [])
 
+    // ── Interaction mode ──────────────────────────────────────────────────────
+
+    /** Switch modes; deselect everything when returning to drag mode. */
+    const handleModeChange = useCallback((mode: InteractionMode) => {
+        if (mode === 'drag') {
+            setNodes((ns) => ns.map((n) => ({ ...n, selected: false })))
+        }
+        setInteractionMode(mode)
+    }, [setNodes])
+
+    /** Delete all selected non-origin nodes and clean up all internal buffers. */
+    const deleteSelected = useCallback(() => {
+        const toDelete = rfNodesRef.current.filter(
+            (n) => n.selected && n.data.role !== 'origin',
+        )
+        if (toDelete.length === 0) return
+
+        const deleteIds = new Set(toDelete.map((n) => n.id))
+        setNodes((ns) => ns.filter((n) => !deleteIds.has(n.id)))
+        setEdges((es) => es.filter(
+            (e) => !deleteIds.has(e.source) && !deleteIds.has(e.target),
+        ))
+
+        const ids = Array.from(deleteIds)
+        for (const id of ids) {
+            pendingNodesRef.current.delete(id)
+            apiHasMoreRef.current.delete(id)
+        }
+        removeAddresses(ids)
+    }, [setNodes, setEdges, removeAddresses])
+
+    /**
+     * Called by ReactFlow when nodes are removed via the Delete/Backspace key.
+     * React Flow has already updated its state; we just clean up our side-channels.
+     */
+    const handleNodesDelete = useCallback((deleted: Node[]) => {
+        const ids = deleted.map((n) => n.id)
+        for (const id of ids) {
+            pendingNodesRef.current.delete(id)
+            apiHasMoreRef.current.delete(id)
+        }
+        removeAddresses(ids)
+    }, [removeAddresses])
+
+    /** Number of selected nodes the investigator can delete (origin excluded). */
+    const selectedCount = rfNodes.filter(
+        (n) => n.selected && n.data.role !== 'origin',
+    ).length
+
     // ── Reconnect (same-node only) ────────────────────────────────────────────
 
     const handleReconnect = useCallback((oldEdge: Edge, newConn: Connection) => {
@@ -399,6 +454,7 @@ export function TransactionGraph({ data, filter }: Props) {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onReconnect={handleReconnect}
+                onNodesDelete={handleNodesDelete}
                 reconnectRadius={12}
                 connectionMode={ConnectionMode.Loose}
                 fitView
@@ -406,7 +462,12 @@ export function TransactionGraph({ data, filter }: Props) {
                 minZoom={0.1}
                 maxZoom={3}
                 nodesConnectable={false}
-                elementsSelectable={false}
+                // ── interaction mode ────────────────────────────────────────
+                panOnDrag={interactionMode === 'drag'}
+                selectionOnDrag={interactionMode === 'select'}
+                elementsSelectable={interactionMode === 'select'}
+                nodesDraggable={interactionMode === 'drag'}
+                deleteKeyCode={interactionMode === 'select' ? 'Delete' : null}
             >
                 <Panel position="top-right">
                     <DateFilterPanel />
@@ -448,8 +509,18 @@ export function TransactionGraph({ data, filter }: Props) {
                     </span>
                 </Panel>
 
-                <MiniMap />
-                <Controls showInteractive={false} />
+                <MiniMap position="bottom-center" />
+                <Controls position="bottom-left" showInteractive={false} />
+
+                <Panel position="bottom-right">
+                    <InteractionPanel
+                        mode={interactionMode}
+                        onModeChange={handleModeChange}
+                        selectedCount={selectedCount}
+                        onDelete={deleteSelected}
+                    />
+                </Panel>
+
                 <Background
                     variant={BackgroundVariant.Dots}
                     gap={24}

@@ -9,11 +9,12 @@ interface GraphStore {
     lastSeenTxids: Map<string, string | null>
     hasMoreTxs:    Map<string, boolean>
 
-    startLoading:   (address: string) => void
-    stopLoading:    (address: string) => void
-    expandAddress:  (address: string) => void
-    setPageState:   (address: string, lastTxid: string | null, hasMore: boolean) => void
-    reset:          () => void
+    startLoading:    (address: string) => void
+    stopLoading:     (address: string) => void
+    expandAddress:   (address: string) => void
+    setPageState:    (address: string, lastTxid: string | null, hasMore: boolean) => void
+    removeAddresses: (ids: string[]) => void
+    reset:           () => void
 }
 
 export const useGraphStore = create<GraphStore>((set) => ({
@@ -51,6 +52,27 @@ export const useGraphStore = create<GraphStore>((set) => ({
             nextTxids.set(address, lastTxid)
             nextHasMore.set(address, hasMore)
             return { lastSeenTxids: nextTxids, hasMoreTxs: nextHasMore }
+        }),
+
+    removeAddresses: (ids) =>
+        set((s) => {
+            const newExpanded = new Set(s.expandedAddresses)
+            const newLoading  = new Set(s.loadingAddresses)
+            const newHasMore  = new Map(s.hasMoreTxs)
+            const newLastSeen = new Map(s.lastSeenTxids)
+            for (const id of ids) {
+                newExpanded.delete(id)
+                newLoading.delete(id)
+                newHasMore.delete(id)
+                newLastSeen.delete(id)
+            }
+            return {
+                expandedAddresses: newExpanded,
+                loadingAddresses:  newLoading,
+                isExpanding:       newLoading.size > 0,
+                hasMoreTxs:        newHasMore,
+                lastSeenTxids:     newLastSeen,
+            }
         }),
 
     reset: () =>

@@ -1,0 +1,62 @@
+/* ── Toolbar container ────────────────────────────────────────────────────── */
+
+.itools {
+    display:        flex;
+    flex-direction: column;
+    gap:            2px;
+    padding:        5px;
+    background:     var(--th-surface);
+    border:         1px solid var(--th-border);
+    font-family:    'JetBrains Mono', monospace;
+}
+
+/* ── Tool button ──────────────────────────────────────────────────────────── */
+
+.itools__btn {
+    display:        flex;
+    align-items:    center;
+    gap:            7px;
+    padding:        6px 10px;
+    background:     transparent;
+    border:         1px solid transparent;
+    border-radius:  2px;
+    color:          var(--th-text-muted);
+    cursor:         pointer;
+    font-family:    inherit;
+    font-size:      0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space:    nowrap;
+    transition:     color 0.12s, background 0.12s, border-color 0.12s;
+}
+
+.itools__btn:hover {
+    color:      var(--th-text);
+    background: var(--th-surface-hov);
+}
+
+.itools__btn--active {
+    color:        var(--th-blue-br);
+    border-color: var(--th-blue);
+    background:   var(--th-blue-dim);
+}
+
+/* ── Danger / delete ──────────────────────────────────────────────────────── */
+
+.itools__btn--danger {
+    color: var(--th-red);
+}
+
+.itools__btn--danger:hover {
+    color:        var(--th-red);
+    border-color: var(--th-red);
+    background:   rgba(182, 60, 40, 0.08);
+}
+
+/* ── Divider ──────────────────────────────────────────────────────────────── */
+
+.itools__sep {
+    height:     1px;
+    background: var(--th-border);
+    margin:     3px 2px;
+}
