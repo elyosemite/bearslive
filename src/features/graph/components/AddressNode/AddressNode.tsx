@@ -6,20 +6,20 @@ import './AddressNode.css'
 export type NodeRole = 'origin' | 'sender' | 'receiver' | 'peer'
 
 export function AddressNode({ id, data }: NodeProps) {
-    const label    = data.label as string
-    const role     = (data.role as NodeRole | undefined) ?? 'peer'
+    const label = data.label as string
+    const role = (data.role as NodeRole | undefined) ?? 'peer'
     const isOrigin = role === 'origin'
 
     const expandedAddresses = useGraphStore((s) => s.expandedAddresses)
-    const loadingAddresses  = useGraphStore((s) => s.loadingAddresses)
-    const hasMoreTxs        = useGraphStore((s) => s.hasMoreTxs)
-    const isExpanding       = useGraphStore((s) => s.isExpanding)
-    const startLoading      = useGraphStore((s) => s.startLoading)
+    const loadingAddresses = useGraphStore((s) => s.loadingAddresses)
+    const hasMoreTxs = useGraphStore((s) => s.hasMoreTxs)
+    const isExpanding = useGraphStore((s) => s.isExpanding)
+    const startLoading = useGraphStore((s) => s.startLoading)
 
-    const isExpanded  = expandedAddresses.has(id)
-    const isLoading   = loadingAddresses.has(id)
-    const hasMore     = hasMoreTxs.get(id) === true
-    const canExpand   = !isOrigin && !isExpanded && !isLoading && !isExpanding
+    const isExpanded = expandedAddresses.has(id)
+    const isLoading = loadingAddresses.has(id)
+    const hasMore = hasMoreTxs.get(id) === true
+    const canExpand = !isOrigin && !isExpanded && !isLoading && !isExpanding
     const canLoadMore = !isOrigin && isExpanded && hasMore && !isLoading && !isExpanding
 
     function handleExpand(e: React.MouseEvent) {
@@ -38,15 +38,15 @@ export function AddressNode({ id, data }: NodeProps) {
         'addr-node',
         `addr-node--${role}`,
         isExpanded && 'addr-node--expanded',
-        isLoading  && 'addr-node--loading',
+        isLoading && 'addr-node--loading',
     ].filter(Boolean).join(' ')
 
     return (
         <div className={nodeClass}>
-            <Handle type="source" position={Position.Top}    id="top"    className="addr-handle" />
-            <Handle type="source" position={Position.Right}  id="right"  className="addr-handle" />
+            <Handle type="source" position={Position.Top} id="top" className="addr-handle" />
+            <Handle type="source" position={Position.Right} id="right" className="addr-handle" />
             <Handle type="source" position={Position.Bottom} id="bottom" className="addr-handle" />
-            <Handle type="source" position={Position.Left}   id="left"   className="addr-handle" />
+            <Handle type="source" position={Position.Left} id="left" className="addr-handle" />
             <span className="addr-node__label">{label}</span>
 
             {!isOrigin && !isExpanded && (
@@ -54,19 +54,19 @@ export function AddressNode({ id, data }: NodeProps) {
                     className={[
                         'addr-node__expand',
                         'nodrag',
-                        isLoading  && 'addr-node__expand--loading',
+                        isLoading && 'addr-node__expand--loading',
                     ].filter(Boolean).join(' ')}
                     onClick={handleExpand}
                     disabled={!canExpand}
                     title={
-                        isLoading   ? 'Loading…'
-                        : isExpanding ? 'Another node is loading'
-                        : 'Expand — follow the money'
+                        isLoading ? 'Loading…'
+                            : isExpanding ? 'Another node is loading'
+                                : 'Expand — follow the money'
                     }
                     aria-label={
-                        isLoading   ? 'Loading'
-                        : isExpanding ? 'Locked — another node loading'
-                        : 'Expand node'
+                        isLoading ? 'Loading'
+                            : isExpanding ? 'Locked — another node loading'
+                                : 'Expand node'
                     }
                 >
                     {isLoading ? (
@@ -92,9 +92,9 @@ export function AddressNode({ id, data }: NodeProps) {
                     onClick={canLoadMore ? handleLoadMore : undefined}
                     disabled={!canLoadMore}
                     title={
-                        isLoading   ? 'Loading…'
-                        : canLoadMore ? 'Load more transactions'
-                        : 'Fully loaded'
+                        isLoading ? 'Loading…'
+                            : canLoadMore ? 'Load more transactions'
+                                : 'Fully loaded'
                     }
                     aria-label={canLoadMore ? 'Load more transactions' : 'Node fully loaded'}
                 >
